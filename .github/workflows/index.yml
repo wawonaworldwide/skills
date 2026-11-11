@@ -1,0 +1,59 @@
+name: Build reviewed skill catalog
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  catalog:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '24'
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+      - run: npm test
+      - run: npm run build:index
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: skills-catalog
+          path: dist/skills-catalog.json
+          if-no-files-found: error
+      - name: Validate the site build configuration
+        if: vars.SKILL_SITE_REF != ''
+        env:
+          SITE_REF: ${{ vars.SKILL_SITE_REF }}
+        run: '[[ "$SITE_REF" =~ ^[0-9a-f]{40}$ ]]'
+      - name: Check out the approved site revision
+        if: vars.SKILL_SITE_REF != ''
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          repository: wawonaworldwide/aipodbuilder-site
+          ref: ${{ vars.SKILL_SITE_REF }}
+          path: site
+          persist-credentials: false
+      - name: Rebuild Astro with the reviewed catalog
+        if: vars.SKILL_SITE_REF != ''
+        working-directory: site
+        env:
+          SKILL_CATALOG_PATH: ${{ github.workspace }}/dist/skills-catalog.json
+        run: |
+          npm ci --ignore-scripts --no-audit --no-fund
+          npm run build:production
+      - name: Save the rebuilt site for review
+        if: vars.SKILL_SITE_REF != ''
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: site-build
+          path: site/dist/
+          if-no-files-found: error

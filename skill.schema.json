@@ -1,0 +1,91 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "name",
+    "slug",
+    "description",
+    "pipeline_stage",
+    "author",
+    "source_url",
+    "license",
+    "version",
+    "tags",
+    "created",
+    "updated"
+  ],
+  "properties": {
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 80,
+      "pattern": "^\\S[^\\r\\n]*$"
+    },
+    "slug": {
+      "type": "string",
+      "maxLength": 64,
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+    },
+    "description": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 180,
+      "pattern": "^\\S[^\\r\\n]*$"
+    },
+    "pipeline_stage": {
+      "enum": [
+        "research",
+        "design",
+        "prep",
+        "approval",
+        "listing",
+        "publishing",
+        "marketing",
+        "analytics",
+        "ops",
+        "other"
+      ]
+    },
+    "author": {
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,37}[a-zA-Z0-9])?$"
+    },
+    "source_url": {
+      "type": "string",
+      "maxLength": 350,
+      "pattern": "^https://github\\.com/[\\w-]+/[\\w.-]+(?:/[\\w./%-]+)?$"
+    },
+    "license": {
+      "const": "MIT"
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+(?:-[0-9A-Za-z.-]+)?$"
+    },
+    "tags": {
+      "type": "array",
+      "maxItems": 12,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "maxLength": 32,
+        "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+      }
+    },
+    "created": {
+      "type": "string",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+    },
+    "updated": {
+      "type": "string",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+    },
+    "source_type": {
+      "enum": ["Open source", "AI POD Builder", "Community"]
+    },
+    "episode": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+    }
+  }
+}
