@@ -1,1 +1,0 @@
-This temporary verification PR checks that changes outside a skill folder are rejected.

@@ -1,0 +1,15 @@
+{
+  "author": "wawonaworldwide",
+  "license": "MIT",
+  "name": "Workflow verification fixture",
+  "slug": "workflow-test-fixture",
+  "source_url": "https://github.com/wawonaworldwide/skills",
+  "updated": "2026-11-11",
+  "version": "1.0.0",
+  "description": "Temporary fixture for verifying the review workflow. It is excluded from the published library.",
+  "pipeline_stage": "ops",
+  "tags": [
+    "verification"
+  ],
+  "created": "2026-11-11"
+}
