@@ -2,6 +2,8 @@ export const publishingConfirmation =
   'Ask for explicit human confirmation immediately before publishing.';
 
 export function publishingFindings(metadata, files) {
+  // External entries contain a pointer only. The maintainer reviews the upstream instructions.
+  if (metadata.source_type === 'Open source') return [];
   const findings = [];
   let publishingLine;
   for (const [file, body] of Object.entries(files)) {
@@ -11,14 +13,8 @@ export function publishingFindings(metadata, files) {
         /\b(?:publish(?:es|ing)?|post(?:s|ing)?|deploy(?:s|ing)?|upload(?:s|ing)?)\b/i.exec(
           line,
         );
-      if (
-        !action ||
-        /\b(?:do not|never|don't|must not|cannot)\b[^.!?]*$/i.test(
-          line.slice(0, action.index),
-        )
-      )
-        continue;
-      publishingLine ??= { file, line: index + 1 };
+      if (!action) continue;
+      // A prohibition on asking for approval is a conflict, even when it precedes the publishing verb.
       if (
         /\bwithout\b.{0,100}\b(?:asking|confirmation|approval)\b|\b(?:skip|bypass|ignore)\b.{0,100}\b(?:confirmation|approval)\b|\b(?:do not|don't|never)\s+(?:ask|request|require)\b/i.test(
           line,
@@ -30,7 +26,15 @@ export function publishingFindings(metadata, files) {
           reason:
             'Publishing instructions must require human confirmation. Remove the conflicting instruction.',
         });
+        continue;
       }
+      if (
+        /\b(?:do not|never|don't|must not|cannot)\b[^.!?]*$/i.test(
+          line.slice(0, action.index),
+        )
+      )
+        continue;
+      publishingLine ??= { file, line: index + 1 };
     }
   }
   const hasConfirmation = (files['SKILL.md'] ?? '')
