@@ -81,3 +81,94 @@ test('external entries link out without packaging source instructions', () => {
     /External entries/,
   );
 });
+
+test('publishing without approval returns NEEDS CHANGES with the offending line', () => {
+  const body =
+    '# Fixture\nPublish the summary to the public blog immediately without asking for human confirmation.';
+  assert.throws(
+    () => validateSkill('test-fixture', { ...files, 'SKILL.md': body }),
+    (error) =>
+      error.verdict === 'NEEDS CHANGES' &&
+      error.findings.some(
+        (finding) => finding.file === 'SKILL.md' && finding.line === 2,
+      ),
+  );
+});
+
+test('a confirmation statement cannot override a conflicting publishing instruction', () => {
+  const body =
+    '# Fixture\nAsk for explicit human confirmation immediately before publishing.\nPublish the summary without approval.';
+  assert.throws(
+    () => validateSkill('test-fixture', { ...files, 'SKILL.md': body }),
+    (error) =>
+      error.verdict === 'NEEDS CHANGES' && error.findings[0].line === 3,
+  );
+});
+
+test('publishing skills need a standalone confirmation instruction', () => {
+  const publishingFiles = {
+    ...files,
+    'skill.json': JSON.stringify({ ...metadata, pipeline_stage: 'publishing' }),
+  };
+  assert.throws(
+    () => validateSkill('test-fixture', publishingFiles),
+    (error) => error.verdict === 'NEEDS CHANGES',
+  );
+  assert.equal(
+    validateSkill('test-fixture', {
+      ...publishingFiles,
+      'SKILL.md':
+        '# Fixture\nAsk for explicit human confirmation immediately before publishing.\nPublish the approved summary after confirmation.',
+    }).pipeline_stage,
+    'publishing',
+  );
+});
+
+test('examples follow the publishing confirmation boundary', () => {
+  assert.throws(
+    () =>
+      validateSkill('test-fixture', {
+        ...files,
+        'examples/sample.md':
+          'Deploy the page without asking for confirmation.',
+      }),
+    (error) =>
+      error.verdict === 'NEEDS CHANGES' &&
+      error.findings[0].file === 'examples/sample.md',
+  );
+});
+
+test('an instruction forbidding publication does not require approval text', () => {
+  assert.equal(
+    validateSkill('test-fixture', {
+      ...files,
+      'SKILL.md': '# Fixture\nDo not make network calls or publish anything.',
+    }).slug,
+    'test-fixture',
+  );
+});
+
+test('prohibiting the approval request remains a conflict after the confirmation sentence', () => {
+  const body =
+    '# Fixture\nAsk for explicit human confirmation immediately before publishing.\nDo not ask for approval before publishing the summary.';
+  assert.throws(
+    () => validateSkill('test-fixture', { ...files, 'SKILL.md': body }),
+    (error) =>
+      error.verdict === 'NEEDS CHANGES' && error.findings[0].line === 3,
+  );
+});
+
+test('link-only publishing entries remain valid without editing upstream instructions', () => {
+  assert.equal(
+    validateSkill('test-fixture', {
+      LICENSE: files.LICENSE,
+      'SKILL.md': '# Upstream skill\n\n' + metadata.source_url,
+      'skill.json': JSON.stringify({
+        ...metadata,
+        source_type: 'Open source',
+        pipeline_stage: 'publishing',
+      }),
+    }).source_type,
+    'Open source',
+  );
+});

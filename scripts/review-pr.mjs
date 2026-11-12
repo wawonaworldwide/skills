@@ -224,7 +224,7 @@ try {
   review =
     error instanceof InvalidSubmission
       ? {
-          verdict: 'REJECT',
+          verdict: error.verdict,
           reasons: [error.message],
           findings: error.findings,
         }
