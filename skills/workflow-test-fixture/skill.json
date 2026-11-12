@@ -7,7 +7,7 @@
   "updated": "2026-11-11",
   "version": "1.0.0",
   "description": "Temporary fixture for verifying the review workflow. It is excluded from the published library.",
-  "pipeline_stage": "ops",
+  "pipeline_stage": "publishing",
   "tags": [
     "verification"
   ],
