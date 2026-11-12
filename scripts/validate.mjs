@@ -1,4 +1,5 @@
 import Ajv from 'ajv';
+import { publishingFindings } from './publishing-policy.mjs';
 import { readFileSync } from 'node:fs';
 
 const read = (name) =>
@@ -25,9 +26,10 @@ const policy = [
 ];
 
 export class InvalidSubmission extends Error {
-  constructor(message, findings = []) {
+  constructor(message, findings = [], verdict = 'REJECT') {
     super(message);
     this.findings = findings;
+    this.verdict = verdict;
   }
 }
 
@@ -130,5 +132,12 @@ export function validateSkill(slug, files, { communityOnly = false } = {}) {
         `# Upstream skill\n\n${meta.source_url}`)
   )
     fail('External entries use a link-only SKILL.md and contain no examples.');
+  const approvalFindings = publishingFindings(meta, files);
+  if (approvalFindings.length)
+    throw new InvalidSubmission(
+      'Publishing approval instructions need changes.',
+      approvalFindings,
+      'NEEDS CHANGES',
+    );
   return meta;
 }
